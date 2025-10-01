@@ -99,32 +99,44 @@ class MainActivity : AppCompatActivity() {
 
         val style = binding.styleDropdown.text.toString().ifEmpty { "Medium" }
 
-        // Collect options from checkboxes
-        val options = mutableListOf<String>()
-        if (binding.optionSimple.isChecked) options.add("Use simple, plain language")
-        if (binding.optionTone.isChecked) options.add("Preserve the original tone of the text")
-        if (binding.optionNumbers.isChecked) options.add("Highlight important numbers and dates")
-        if (binding.optionActions.isChecked) options.add("Extract key action items clearly")
-        if (binding.optionBulletPoints.isChecked) options.add("Use Bullet Points to summarize")
+        // Dynamically gather rules
+        val rules = mutableListOf<String>()
 
-        val extraGuidelines = if (options.isNotEmpty()) {
-            options.joinToString(prefix = "\nAdditional Guidelines:\n- ", separator = "\n- ")
-        } else ""
-        // Build a richer summarization prompt
-        val finalPrompt = """
-        You are a professional summarizer.
-        Task: Summarize the text below in a $style format with $extraGuidelines
-        
-        Guidelines:
-        - Focus only on the most important points.
-        - Avoid filler and repetition.
-        - If Bullet Points, keep each under 15 words.
-        - Keep the tone neutral and easy to understand.
-        
-        Text to summarize:
-        $userText
-    """.trimIndent()
+        // Length / style
+        rules.add("Length: $style")
 
+        // Checkboxes → summarization behavior
+        if (binding.optionBulletPoints.isChecked) {
+            rules.add("Format: Bullet points (each ≤ 15 words)")
+        } else {
+            rules.add("Format: Paragraph form")
+        }
+        if (binding.optionTone.isChecked) {
+            rules.add("Tone: Preserve the original tone of the text")
+        } else if (binding.optionSimple.isChecked) {
+            rules.add("Tone: Simple, plain language")
+        } else {
+            rules.add("Tone: Neutral and professional")
+        }
+        if (binding.optionNumbers.isChecked) {
+            rules.add("Emphasis: Highlight numbers, dates, and statistics")
+        }
+        if (binding.optionActions.isChecked) {
+            rules.add("Focus: Extract and clearly state key action items")
+        } else {
+            rules.add("Focus: Capture main ideas and supporting details")
+        }
+        // Build final prompt
+        val finalPrompt = buildString {
+            appendLine("You are an advanced text summarizer.")
+            appendLine("Summarize the following text with maximum accuracy and clarity.")
+            appendLine()
+            appendLine("Rules:")
+            rules.forEachIndexed { i, rule -> appendLine("${i + 1}. $rule") }
+            appendLine()
+            appendLine("Now summarize this text:")
+            appendLine(userText)
+        }
         try {
             val inputFile = File(ollamaDir, "input.txt")
             inputFile.writeText(finalPrompt)
@@ -133,6 +145,7 @@ class MainActivity : AppCompatActivity() {
             Toast.makeText(this, "Error writing file: ${e.message}", Toast.LENGTH_LONG).show()
         }
     }
+
 
     private fun pollForOutput() {
         Thread {
