@@ -83,6 +83,12 @@
             android:text="Preserve original tone" />
 
         <CheckBox
+            android:id="@+id/optionBulletPoints"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Summrize in bullet points" />
+
+        <CheckBox
             android:id="@+id/optionNumbers"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
@@ -93,6 +99,8 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="Extract key action items" />
+
+
 
     </LinearLayout>
 
