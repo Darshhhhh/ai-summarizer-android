@@ -67,7 +67,7 @@ class MainActivity : AppCompatActivity() {
             binding.progressBar.visibility = View.VISIBLE
             binding.outputCard.visibility = View.GONE
 
-            sendToOllama("Summarize in $style style:\n$text")
+            sendToOllama(text)
             pollForOutput()
         }
 
@@ -92,15 +92,32 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    private fun sendToOllama(text: String) {
+    private fun sendToOllama(userText: String) {
         if (!ollamaDir.exists()) {
             ollamaDir.mkdirs()
         }
 
+        val style = binding.styleDropdown.text.toString().ifEmpty { "Medium" }
+
+        // Build a richer summarization prompt
+        val finalPrompt = """
+        You are a professional summarizer.
+        Task: Summarize the text below in a $style format.
+
+        Guidelines:
+        - Focus only on the most important points.
+        - Avoid filler and repetition.
+        - If Bullet Points, keep each under 15 words.
+        - Keep the tone neutral and easy to understand.
+
+        Text to summarize:
+        $userText
+    """.trimIndent()
+
         try {
             val inputFile = File(ollamaDir, "input.txt")
-            inputFile.writeText(text)
-            Toast.makeText(this, "Wrote to: ${inputFile.absolutePath}", Toast.LENGTH_LONG).show()
+            inputFile.writeText(finalPrompt)
+            Toast.makeText(this, "Prompt written for Ollama", Toast.LENGTH_SHORT).show()
         } catch (e: Exception) {
             Toast.makeText(this, "Error writing file: ${e.message}", Toast.LENGTH_LONG).show()
         }
